@@ -1,0 +1,222 @@
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+//Kullanılan kütüphaneler
+//Forma pictureBox nesnesi ekleyiniz ve Properties den docklayınız 
+
+namespace grafikselIslemler
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+        
+        public enum secim
+        {
+            cizgi,
+            dikdörtgen,
+            elips,
+            cokgen,
+            yazi,
+            temizle
+        }
+
+        struct sCizgi
+        {
+            public Color _color;
+            public Point _pBasla;
+            public Point _pBitir;
+            public float _Kalınlık;
+        }
+        struct sDikdörtgen
+        {
+            public Color _color;
+            public Point _pİlk;
+            public Point _pBasla;
+            public Point _pBitir;
+            public float _Kalınlık;
+        }
+        struct sElips
+        {
+            public Color _color;
+            public Point _pİlk;
+            public Point _pBasla;
+            public Point _pBitir;
+            public float _Kalınlık;
+        }
+        struct sCokgen
+        {
+            public Color _color;
+            public Point _pİlk;
+            public Point _pBasla;
+            public Point _pBitir;
+            public float _Kalınlık;
+        }
+        struct sYazi
+        {
+            public Brushes _br;
+            public Point _pBasla;
+            public Font _Font;
+            public string _yazi;
+        }
+
+        List<sCizgi> lCizgiler = new List<sCizgi>();
+        List<sDikdörtgen> lDikdörtgenler = new List<sDikdörtgen>();
+        List<sElips> lElipsler = new List<sElips>();
+        List<sCokgen> lCokgenler = new List<sCokgen>();
+        List<sYazi> lYazilar = new List<sYazi>();
+
+        sCizgi cizgi;
+        sDikdörtgen diktörtgen;
+        sElips elips;
+        sCokgen cokgen;
+        sYazi yazi;
+
+        public static secim sec = secim.cizgi;
+        public static Font font = new Font("Arial", 10f);
+        public static Brushes brush;
+        public static Color color = Color.Black;
+        public static string yzi = "default";
+        public static float kalınlık = 1f;
+
+        bool dcizim;
+
+        private void ciz_Cizgi(sCizgi cz, PaintEventArgs e)
+        {
+            e.Graphics.DrawLine(new Pen(cz._color, cz._Kalınlık), cz._pBasla, cz._pBitir);
+        }
+        private void ciz_Dikdörtgen(sDikdörtgen dk, PaintEventArgs e)
+        {
+            e.Graphics.DrawRectangle(
+            new Pen(dk._color, dk._Kalınlık),new Rectangle(
+                            Math.Min(dk._pBasla.X, dk._pİlk.X),
+                            Math.Min(dk._pBitir.Y, dk._pİlk.Y),
+                            Math.Abs(dk._pBasla.X - dk._pİlk.X),
+                            Math.Abs(dk._pBitir.Y - dk._pİlk.Y)
+                          )
+                     );
+        }
+        private void ciz_Elips(sElips el, PaintEventArgs e)
+        {
+            e.Graphics.DrawEllipse(
+            new Pen(el._color,el._Kalınlık),
+            new Rectangle(
+            el._pİlk.X,
+            el._pİlk.Y,
+            el._pBasla.X - el._pİlk.X,
+            el._pBitir.Y - el._pİlk.Y)
+            );
+        }
+
+        private void ciz_Yazi(sYazi yz, PaintEventArgs e)
+        {
+            e.Graphics.DrawString(yz._yazi, yz._Font,Brushes.Black, yz._pBasla);
+        }
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+            foreach (sCizgi cs in lCizgiler)
+                ciz_Cizgi(cs, e);
+            foreach (sDikdörtgen dk in lDikdörtgenler)
+                ciz_Dikdörtgen(dk, e);
+            foreach (sElips el in lElipsler)
+                ciz_Elips(el, e);
+            foreach (sYazi yz in lYazilar)
+                ciz_Yazi(yz, e);
+
+            if (dcizim)
+            {
+                switch (sec)
+                {
+                    case secim.cizgi:
+                        cizgi._color =color;
+                        cizgi._Kalınlık = kalınlık;
+                        ciz_Cizgi(cizgi, e);
+                        break;
+                    case secim.dikdörtgen:
+                        diktörtgen._color = color;
+                        diktörtgen._Kalınlık = kalınlık;
+                        ciz_Dikdörtgen(diktörtgen, e);
+                        break;
+                    case secim.elips:
+                        elips._color = color;
+                        elips._Kalınlık = kalınlık;
+                        ciz_Elips(elips, e);
+                        break;
+                    case secim.cokgen:
+                        break;
+
+                    case secim.yazi:
+                        yazi._yazi = yzi;
+                        yazi._Font = font;
+                        ciz_Yazi(yazi, e);
+                        break;
+                    case secim.temizle:
+                        lCizgiler.Clear();
+                        lDikdörtgenler.Clear();
+                        lElipsler.Clear();
+                        lYazilar.Clear();
+                        lCokgenler.Clear();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            dcizim = true;
+            cizgi._pBasla = e.Location;
+            diktörtgen._pİlk = e.Location;
+            diktörtgen._pBitir = e.Location;
+            elips._pİlk = e.Location;
+            elips._pBitir = e.Location;
+            yazi._pBasla = e.Location;
+            this.pictureBox1.Invalidate();
+        }
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            cizgi._pBitir = e.Location;
+            diktörtgen._pBasla = e.Location;
+            diktörtgen._pBitir = e.Location;
+            elips._pBasla = e.Location;
+            elips._pBitir = e.Location;
+            yazi._pBasla = e.Location;
+            this.pictureBox1.Invalidate();
+        }
+        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
+        {
+            dcizim = false;
+            switch (sec)
+            {
+                case secim.cizgi:
+                    lCizgiler.Add(cizgi);
+                    break;
+                case secim.dikdörtgen:
+                    lDikdörtgenler.Add(diktörtgen);
+                    break;
+                case secim.elips:
+                    lElipsler.Add(elips);
+                    break;
+                case secim.cokgen:
+                    break;
+                case secim.yazi:
+                    lYazilar.Add(yazi);
+                    break;
+                default:
+                    break;
+            }
+            this.pictureBox1.Invalidate();
+        }
+    }
+}
